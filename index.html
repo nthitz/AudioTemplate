@@ -1,4 +1,4 @@
-<html>
+<!-- <html> -->
 
   <head>
     <style>
@@ -14,7 +14,7 @@
     <script src = "lib/ShaderLoader.js"             ></script>
 
     <script src = "lib/TrackballControls.js"        ></script>
-      
+
 
     <script src = "AudioController.js"              ></script>
     <script src = "UserAudio.js"                    ></script>
@@ -26,7 +26,7 @@
 
 
       var camera, renderer, scene , controls , clock;
-      
+
       var audioMesh;
 
       // Setting up shaders
@@ -35,6 +35,8 @@
       shaders.shaderSetLoaded = function(){
         init();
         animate();
+        stream.play()
+
       }
 
       shaders.load( 'vs-audio' , 'audio' , 'vertex'   );
@@ -49,18 +51,20 @@
       */
       var audio = new AudioController();
 
-      var userAudio = new UserAudio( audio.ctx , audio.gain );
 
+      // var userAudio = new UserAudio( audio.ctx , audio.gain );
 
+      var file = 'test.mp3';
+      var stream = new Stream(file, audio.ctx, audio.gain )
       // Muting audio, so we don't have feedback
-      audio.mute.gain.value = 0;
+      //audio.mute.gain.value = 0;
 
 
 
 
       // Normals For the Material
       var uniforms = {
-  
+
         t_audio: { type:"t"  , value : audio.texture },
         dT:      { type:"f"  , value : 0             },
         time:    { type:"f"  , value : 0             },
@@ -81,7 +85,7 @@
         var w = window.innerWidth;
         var h = window.innerHeight;
 
-        camera = new THREE.PerspectiveCamera( 65 , w/h , .001 , 4 );
+        camera = new THREE.PerspectiveCamera( 65 , w/h , 1 , 10 );
         camera.position.z = 2;
 
         scene = new THREE.Scene();
@@ -108,34 +112,38 @@
 
         */
 
-        var geo = new THREE.IcosahedronGeometry( .2 , 7 );
+        var geo = new THREE.IcosahedronGeometry( .2 , 3 );
+        // var geo = new THREE.SphereGeometry( .6 , 20,20);
+        // var geo = new THREE.PlaneBufferGeometry( 2, 2, 30, 0);
+        // var geo = new THREE.BoxGeometry(2, 2, 2, 5, 5, 5);
 
         var mat = new THREE.ShaderMaterial({
 
           uniforms: uniforms,
           vertexShader: shaders.vs.audio,
           fragmentShader: shaders.fs.audio,
+          side: THREE.DoubleSide
 
-        }); 
+        });
 
         audioMesh = new THREE.Mesh( geo , mat );
- 
-        scene.add( audioMesh ); 
+
+        scene.add( audioMesh );
 
 
       }
 
-      
+
       function animate(){
 
         requestAnimationFrame( animate );
-       
+
         uniforms.dT.value = clock.getDelta();
         uniforms.time.value += uniforms.dT.value;
 
         controls.update();
         audio.update();
-        
+
         renderer.render( scene , camera );
 
       }
