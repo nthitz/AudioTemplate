@@ -1,4 +1,4 @@
-function Stream( file , ctx , output ){
+function Stream( file , ctx , output , readyCallback){
 
 
   this.audio = new Audio();
@@ -8,7 +8,7 @@ function Stream( file , ctx , output ){
   this.output = output;
 
   this.audio.src = this.file;
- 
+  this.audio.addEventListener('loadeddata', readyCallback)
   this.source = this.ctx.createMediaElementSource( this.audio );
   this.source.connect( this.output );
 

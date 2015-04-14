@@ -30,12 +30,11 @@
       var audioMesh;
 
       // Setting up shaders
-      var shaders = new ShaderLoader( 'shaders' );
+      var shaders = new ShaderLoader( 'glsl' );
 
       shaders.shaderSetLoaded = function(){
         init();
         animate();
-        stream.play()
 
       }
 
@@ -55,7 +54,10 @@
       // var userAudio = new UserAudio( audio.ctx , audio.gain );
 
       var file = 'test.mp3';
-      var stream = new Stream(file, audio.ctx, audio.gain )
+      var stream = new Stream(file, audio.ctx, audio.gain, function() {
+        console.log('stream ready')
+        stream.play();
+      })
       // Muting audio, so we don't have feedback
       //audio.mute.gain.value = 0;
 
@@ -85,8 +87,8 @@
         var w = window.innerWidth;
         var h = window.innerHeight;
 
-        camera = new THREE.PerspectiveCamera( 65 , w/h , 1 , 10 );
-        camera.position.z = 2;
+        camera = new THREE.PerspectiveCamera( 65 , w/h , 1 , 100 );
+        camera.position.z = 10;
 
         scene = new THREE.Scene();
 
@@ -112,25 +114,65 @@
 
         */
 
-        var geo = new THREE.IcosahedronGeometry( .2 , 3 );
-        // var geo = new THREE.SphereGeometry( .6 , 20,20);
-        // var geo = new THREE.PlaneBufferGeometry( 2, 2, 30, 0);
-        // var geo = new THREE.BoxGeometry(2, 2, 2, 5, 5, 5);
+        // var geo = new THREE.IcosahedronGeometry( 2 , 1 );
+         // var geo = new THREE.SphereGeometry( .5 , 20,20);
+        var geo = new THREE.BoxGeometry(2, 2, 2, 5, 5, 5);
+        // var geo = new THREE.PlaneBufferGeometry( 2, 2, 20, 2);
 
         var mat = new THREE.ShaderMaterial({
 
           uniforms: uniforms,
           vertexShader: shaders.vs.audio,
           fragmentShader: shaders.fs.audio,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
+          wireframe: true
 
         });
 
-        audioMesh = new THREE.Mesh( geo , mat );
+        var assignUVs = function( geometry ){
 
-        scene.add( audioMesh );
+            geometry.computeBoundingBox();
 
+            var max     = geometry.boundingBox.max;
+            var min     = geometry.boundingBox.min;
 
+            var offset  = new THREE.Vector2(0 - min.x, 0 - min.y);
+            var range   = new THREE.Vector2(max.x - min.x, max.y - min.y);
+
+            geometry.faceVertexUvs[0] = [];
+            var faces = geometry.faces;
+
+            for (i = 0; i < geometry.faces.length ; i++) {
+
+              var v1 = geometry.vertices[faces[i].a];
+              var v2 = geometry.vertices[faces[i].b];
+              var v3 = geometry.vertices[faces[i].c];
+
+              geometry.faceVertexUvs[0].push([
+                new THREE.Vector2( ( v1.x + offset.x ) / range.x , ( v1.y + offset.y ) / range.y ),
+                new THREE.Vector2( ( v2.x + offset.x ) / range.x , ( v2.y + offset.y ) / range.y ),
+                new THREE.Vector2( ( v3.x + offset.x ) / range.x , ( v3.y + offset.y ) / range.y )
+              ]);
+
+            }
+
+            geometry.uvsNeedUpdate = true;
+
+        }
+        // assignUVs(geo)
+        for(var i = 0; i < 10; i++) {
+          audioMesh = new THREE.Mesh( geo , mat );
+          var range = 20;
+          // audioMesh.position = new THREE.Vector3(Math.random() * 5, Math.random() * 5, Math.random() * 5)
+          audioMesh.position.x = (Math.random() - 0.5) * range;
+          audioMesh.position.y = (Math.random() - 0.5) * range;
+          audioMesh.position.z = (Math.random() - 0.5) * range;
+
+          console.log(audioMesh.rotation)
+
+          scene.add( audioMesh );
+
+        }
       }
 
 
